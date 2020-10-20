@@ -63,31 +63,38 @@ def init_db_command():
 
 app = create_app()
 
-
-@app.route('/')
-def home():
-    return "Invalid Request URL"
-
-@app.route('/trades',  methods = ['POST'])
-def createTrade():
+def getNewTrade(data):
     id = next_number()
-    data = request.get_json()
     type = data['type']
     user_id = data['user_id']
     symbol = data['symbol']
     shares  = data['shares']
     price  = data['price']
     timestamp  = data['timestamp']
-    if shares not in range(1,100):
-        return Response(status=400)
-    elif type not in acceptable_types:
-        return Response(status=400)
-    
-    new_trade = Trade(id, type, user_id, symbol, shares, price, timestamp)
-    trade_collection.append(new_trade)
-    resp = app.response_class(response=json.dumps(new_trade.toJson(), indent = 4),
+    return Trade(id, type, user_id, symbol, shares, price, timestamp)
+
+
+@app.route('/')
+def home():
+    return "Invalid Request URL"
+
+@app.route('/trades',  methods = ['POST','GET'])
+def createTrade():
+    if request.method == 'POST':
+        new_trade = getNewTrade(request.get_json())
+        # handling input validations
+        if new_trade.shares not in range(1,100):
+            return Response(status=400)
+        elif new_trade.type not in acceptable_types:
+            return Response(status=400)
+        else:
+            trade_collection.append(new_trade)
+            return app.response_class(response=json.dumps(new_trade.toJson(), indent = 2),
                                   status=201,
                                   mimetype='application/json')
-    return resp
+    elif request.method == 'GET':
+            return app.response_class(response=json.dumps([b.toJson() for b in trade_collection], indent = 2),
+                                  status=200,
+                                  mimetype='application/json')
 
 
