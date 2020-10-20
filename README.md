@@ -9,7 +9,7 @@
 
 - Python version: 3.7
 - Flask version: 1.1.2
-- Flask-SQLAlchemy: 2.4.4
+-   
 - Default Port: 8000
 
 **Commands**
