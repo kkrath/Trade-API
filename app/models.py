@@ -11,3 +11,13 @@ class Trade:
         self.timestamp = timestamp
     def toJson(self):
         return json.dumps(self, default=lambda o: o.__dict__)
+    def toString(self):
+        return {
+            'id' : self.id,
+            'type' : self.type,
+            'user_id' : self.user_id,
+            'symbol' : self.symbol,
+            'shares' : self.shares,
+            'price' : self.price,
+            'timestamp' : self.timestamp
+        }

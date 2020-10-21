@@ -43,26 +43,31 @@ def init_db():
     db.create_all()
 
 
-# global variables
-acceptable_types = ["buy", "sell"]
-trade_collection = []
-num = 0
-# this is an auto incrementor function which returns continuous numbers on each call
-
-def next_number():
-    global num
-    num += 1
-    return num
 
 @click.command("init-db")
 @with_appcontext
 def init_db_command():
     init_db()
     click.echo("Initialized the database.")
-    click.echo("Listening to http server")
 
+
+#  @author kkrath ------ following code is written for the hacker rank test for salesforce ----------------
 app = create_app()
 
+
+# global variables
+acceptable_types = ["buy", "sell"]
+trade_collection = []
+num = 0
+
+# this is an auto incrementor function which returns continuous numbers on each call
+def next_number():
+    global num
+    num += 1
+    return num
+
+
+# this will return a new trade object
 def getNewTrade(data):
     id = next_number()
     type = data['type']
@@ -74,10 +79,31 @@ def getNewTrade(data):
     return Trade(id, type, user_id, symbol, shares, price, timestamp)
 
 
+# this will do a binary search to fetch the trade by id
+def searchTrade(id):
+    l = 0
+    h = len(trade_collection)
+    m = l + (h - l) // 2
+    while(l < h):
+        if id == trade_collection[m].id:
+            return trade_collection[m]
+        elif id < trade_collection[m].id:
+            h = m - 1
+        else:
+            l = m + 1
+    return None
+
+
+''' This section contains URI to resource mapping '''
+
+# default URI will show home page with API documentation - swagger
 @app.route('/')
 def home():
-    return "Invalid Request URL"
+    return "Work In progress !! Home Page will contain the API documentation soon."
 
+
+# This URI will create trade for POST and Fetch all the trades for GET
+# if the input does not meet the criteria it will throw 400
 @app.route('/trades',  methods = ['POST','GET'])
 def createTrade():
     if request.method == 'POST':
@@ -89,12 +115,27 @@ def createTrade():
             return Response(status=400)
         else:
             trade_collection.append(new_trade)
-            return app.response_class(response=json.dumps(new_trade.toJson(), indent = 2),
+            return app.response_class(response=new_trade.toJson(),
                                   status=201,
                                   mimetype='application/json')
     elif request.method == 'GET':
-            return app.response_class(response=json.dumps([b.toJson() for b in trade_collection], indent = 2),
+            trades = [b.toString() for b in trade_collection]
+            return app.response_class(response=json.dumps({"trades":trades}),
                                   status=200,
                                   mimetype='application/json')
 
 
+# this URI will fetch the trade by id if it exists else throw 404
+@app.route('/trades/<id>', methods = ['GET','DELETE', 'PUT', 'PATCH'])
+def fetchTradeById(id):
+    # we will do a binary search to fetch the trade as the trades are sorted by id
+    if request.method == 'GET':
+        result = searchTrade(int(id))
+        if result:
+            return app.response_class(response=result.toJson(),
+                                  status=200,
+                                  mimetype='application/json')
+        else:
+            return Response(status=404)
+    else:
+        return Response(status=405)
