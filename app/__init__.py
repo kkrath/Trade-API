@@ -82,9 +82,9 @@ def getNewTrade(data):
 # this will do a binary search to fetch the trade by id
 def searchTrade(id):
     l = 0
-    h = len(trade_collection)
-    m = l + (h - l) // 2
-    while(l < h):
+    h = len(trade_collection) - 1
+    while l <= h:
+        m = (h + l) // 2
         if id == trade_collection[m].id:
             return trade_collection[m]
         elif id < trade_collection[m].id:
